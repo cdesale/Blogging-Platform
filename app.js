@@ -4,9 +4,15 @@ require('dotenv/config')
 
 const app = express()
 const usersRoute = require('./routes/users')
+const bodyParser = require('body-parser')
+const mongoose = require('mongoose')
 
 //2. Middleware.
+app.use(bodyParser.json())
 app.use('/users', usersRoute)
+mongoose.connect(process.env.DB_CONNECTOR, ()=>{
+    console.log('DB is connected')
+})
 
 //3. Create a route.
 app.get('/',(req,res)=>{

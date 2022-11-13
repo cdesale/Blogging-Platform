@@ -1,6 +1,11 @@
 const express = require('express')
+const {registerFormatValidation} = require('../validations/validation')
+const User = require('../models/User')
+const bcryptjs = require('bcryptjs')
+const jsonwebtoken = require('jsonwebtoken')
 
 const router = express.Router()
+
 
 router.get('/',(req,res)=>{
     res.send('Go to /register to register and go to /login for login')
@@ -10,9 +15,46 @@ router.get('/register',(req,res)=>{
     res.send('Your in the registration page. Go ahead and register on MiniWall.')
 })
 
-router.get('/login',(req,res)=>{
-    res.send('Your in the login page. Go ahead and login on MiniWall.')
+router.post('/register', async (req,res)=>{
+    //Validate the data entered by user.
+    const {error} = registerFormatValidation(req.body)
+    if (error) {
+        return res.status(400).send({message:error['details'][0]['message']})
+    }
+
+    //Check if the user exists based on email.
+    const userExists = await User.findOne({email:req.body.email})
+    if(userExists){
+        return res.status(400).send({message:'User already exists'})
+    }
+
+    //Encrypt password before saving the user data.
+    const salt = await bcryptjs.genSalt(5)
+    const hashedPassword = await bcryptjs.hash(req.body.password, salt)
+
+    //Create user object to save.
+    const user = new User({
+        username: req.body.username,
+        email: req.body.email,
+        password: hashedPassword
+        })
+    try{
+        //Save user to database.
+        const savedUser = await user.save()
+        res.send(savedUser)
+
+        // //Create auth token for new created user and let user know that they are authenticated 
+        // //and can proceed to browse page.
+        // const token = jsonwebtoken.sign({_id:savedUser._id}, process.env.TOKEN_SECRET)
+        // res.header('auth-token', token).send('User created, proceed to MiniWall browse posts!')
+    }catch(err){
+        console.log(err)
+        res.status(400).send({message:err})
+    }
 })
 
+router.get('/login',(req,res)=>{
+    res.send('You are in the login page. Go ahead and login on MiniWall.')
+})
 
 module.exports = router
