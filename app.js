@@ -1,5 +1,6 @@
 //1. Import the libraries.
 const express = require('express')
+require('dotenv/config')
 
 const app = express()
 
@@ -9,6 +10,6 @@ app.get('/',(req,res)=>{
 })
 
 //3. Start the server.
-app.listen(3000,()=>{
+app.listen(process.env.PORT,()=>{
     console.log('Server is up and running...')
 })
