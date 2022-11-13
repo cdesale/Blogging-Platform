@@ -1,5 +1,5 @@
 const express = require('express')
-const {registerFormatValidation} = require('../validations/validation')
+const {registerFormValidation, loginFormValidation} = require('../validations/validation')
 const User = require('../models/User')
 const bcryptjs = require('bcryptjs')
 const jsonwebtoken = require('jsonwebtoken')
@@ -17,7 +17,7 @@ router.get('/register',(req,res)=>{
 
 router.post('/register', async (req,res)=>{
     //Validate the data entered by user.
-    const {error} = registerFormatValidation(req.body)
+    const {error} = registerFormValidation(req.body)
     if (error) {
         return res.status(400).send({message:error['details'][0]['message']})
     }
@@ -41,12 +41,11 @@ router.post('/register', async (req,res)=>{
     try{
         //Save user to database.
         const savedUser = await user.save()
-        res.send(savedUser)
 
-        // //Create auth token for new created user and let user know that they are authenticated 
-        // //and can proceed to browse page.
-        // const token = jsonwebtoken.sign({_id:savedUser._id}, process.env.TOKEN_SECRET)
-        // res.header('auth-token', token).send('User created, proceed to MiniWall browse posts!')
+        //Create auth token for newly created user and let user know that they are authenticated 
+        //and can proceed to browse page.
+        const token = getAuthToken(savedUser)
+        res.header('auth-token', token).send('User created, proceed to MiniWall browse posts!')
     }catch(err){
         console.log(err)
         res.status(400).send({message:err})
@@ -56,5 +55,29 @@ router.post('/register', async (req,res)=>{
 router.get('/login',(req,res)=>{
     res.send('You are in the login page. Go ahead and login on MiniWall.')
 })
+
+router.post('/login', async (req,res)=>{
+    const {error} = loginFormValidation(req.body)
+    if (error) {
+        return res.status(400).send({message:error['details'][0]['message']})
+    }
+
+    const user = await User.findOne({email:req.body.email})
+    if(!user){
+        return res.status(400).send({message:'User does not exists!'})
+    }
+
+    const passwordValidation = await bcryptjs.compare(req.body.password, user.password)
+    if(!passwordValidation){
+        return res.status(401).send({message:'Password is wrong!'})
+    }
+
+    const token = getAuthToken(user)
+    res.header('auth-token', token).send({'auth-token':token})
+})
+
+const getAuthToken = (user)=>{
+    return jsonwebtoken.sign({_id:user._id}, process.env.TOKEN_SECRET)
+}
 
 module.exports = router
