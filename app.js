@@ -3,10 +3,10 @@ const express = require('express')
 require('dotenv/config')
 
 const app = express()
-const registerRoute = require('./routes/register')
+const usersRoute = require('./routes/users')
 
 //2. Middleware.
-app.use('/register', registerRoute)
+app.use('/users', usersRoute)
 
 //3. Create a route.
 app.get('/',(req,res)=>{

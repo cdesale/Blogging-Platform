@@ -1,0 +1,18 @@
+const express = require('express')
+
+const router = express.Router()
+
+router.get('/',(req,res)=>{
+    res.send('Go to /register to register and go to /login for login')
+})
+
+router.get('/register',(req,res)=>{
+    res.send('Your in the registration page. Go ahead and register on MiniWall.')
+})
+
+router.get('/login',(req,res)=>{
+    res.send('Your in the login page. Go ahead and login on MiniWall.')
+})
+
+
+module.exports = router
