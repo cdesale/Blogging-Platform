@@ -1,0 +1,23 @@
+{
+  "name": "miniwallrestapi",
+  "version": "1.0.0",
+  "description": "This is the API for the MiniWall app.",
+  "main": "index.js",
+  "scripts": {
+    "start": "nodemon app.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cdesale/MiniWall-REST-API.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/cdesale/MiniWall-REST-API/issues"
+  },
+  "homepage": "https://github.com/cdesale/MiniWall-REST-API#readme",
+  "dependencies": {
+    "express": "^4.18.2",
+    "nodemon": "^2.0.20"
+  }
+}
