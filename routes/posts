@@ -38,7 +38,7 @@ router.post('/create', verifyToken, async(req, res)=>{
     const post = new Post({
         title: req.body.title,
         description: req.body.description,
-        owner: await getRequestUserId(req),
+        owner: getRequestUserId(req),
         comments: [],
         likes: [],
         likesCount: 0
@@ -59,7 +59,7 @@ router.post('/like/:postId', verifyToken, async(req,res)=>{
         return res.status(400).send({message:err})
     }
     const postOwnerUserId = post.owner._id.toString()
-    const requestUserId = await getRequestUserId(req)
+    const requestUserId = getRequestUserId(req)
     if(postOwnerUserId === requestUserId){
         return res.status(400).send('You cannot like your own post!')
     }
@@ -98,7 +98,7 @@ router.post('/comment/:postId', verifyToken, async(req, res)=>{
 
     const comment = new Comment({
         commentText: req.body.commentText,
-        owner: await getRequestUserId(req)
+        owner: getRequestUserId(req)
     })
 
     let savedComment
@@ -117,7 +117,7 @@ router.post('/comment/:postId', verifyToken, async(req, res)=>{
     }
 })
 
-const getRequestUserId = async (req)=>{
+const getRequestUserId = (req)=>{
     const token = req.header('auth-token')
     const decodedToken = jsonwebtoken.verify(token, process.env.TOKEN_SECRET)
     return decodedToken._id
