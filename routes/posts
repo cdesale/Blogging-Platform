@@ -1,10 +1,127 @@
 const express = require('express')
-const { verifyToken } = require('../validations/validation')
+const {verifyToken} = require('../validations/validation')
+const Post = require('../models/Post')
+const jsonwebtoken = require('jsonwebtoken')
+const User = require('../models/User')
+const Comment = require('../models/Comment')
+const {postFormValidation, commentFormValidation} = require('../validations/validation')
 
 const router = express.Router()
 
-router.get('/', verifyToken, (req,res)=>{
-    res.send('You are on your Wall..')
+router.get('/', verifyToken, async(req,res)=>{
+    try{
+        const posts = await Post.find()
+                                .sort({'likesCount': -1, 'timeStamp':-1})
+                                .populate('likes')
+                                .populate('owner')
+                                .populate(   
+                                {
+                                    path: 'comments',
+                                    model: Comment,
+                                    populate: {
+                                        path: 'owner',
+                                        model: User
+                                    }
+                                })
+        res.send(posts)
+    }catch(err){
+        res.status(400).send({message:err})
+    }
 })
+
+router.post('/create', verifyToken, async(req, res)=>{
+    const {error} = postFormValidation(req.body)
+    if (error) {
+        return res.status(400).send({message:error['details'][0]['message']})
+    }
+
+    const post = new Post({
+        title: req.body.title,
+        description: req.body.description,
+        owner: await getRequestUserId(req),
+        comments: [],
+        likes: [],
+        likesCount: 0
+    })
+    try{
+        const savedPost = await post.save()
+        res.send(savedPost)
+    }catch(err){
+        res.status(400).send({message:err})
+    }
+})
+
+router.post('/like/:postId', verifyToken, async(req,res)=>{
+    let post
+    try{
+        post = await Post.findById(req.params.postId).populate('owner')
+    }catch(err){
+        return res.status(400).send({message:err})
+    }
+    const postOwnerUserId = post.owner._id.toString()
+    const requestUserId = await getRequestUserId(req)
+    if(postOwnerUserId === requestUserId){
+        return res.status(400).send('You cannot like your own post!')
+    }
+
+    if(post.likes.includes(requestUserId)){
+        return res.status(400).send('You have already liked this post!')
+    }
+
+    post.likes.push(requestUserId)
+    post.likesCount = post.likes.length
+
+    try{
+        const savedPost = await post.save()
+        res.send("You have liked this post!")
+    }catch(err){
+        res.status(400).send({message:err})
+    }
+})
+
+router.post('/comment/:postId', verifyToken, async(req, res)=>{
+    const {error} = commentFormValidation(req.body)
+    if (error) {
+        return res.status(400).send({message:error['details'][0]['message']})
+    }
+
+    let post
+    try{
+        post = await Post.findById(req.params.postId)
+    }catch(err){
+        return res.status(400).send({message:err})
+    }
+
+    if (!post) {
+        return res.status(400).send("Post not found!")
+    }
+
+    const comment = new Comment({
+        commentText: req.body.commentText,
+        owner: await getRequestUserId(req)
+    })
+
+    let savedComment
+    try{
+        savedComment = await comment.save()
+    }catch(err){
+        return res.status(400).send({message:err})
+    }
+    
+    post.comments.push(savedComment._id)
+    try{
+        const savedPost = await post.save()
+        res.send("You have commented on this post!")
+    }catch(err){
+        res.status(400).send({message:err})
+    }
+})
+
+const getRequestUserId = async (req)=>{
+    const token = req.header('auth-token')
+    const decodedToken = jsonwebtoken.verify(token, process.env.TOKEN_SECRET)
+    return decodedToken._id
+}
+
 
 module.exports = router 

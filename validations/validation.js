@@ -36,6 +36,25 @@ const verifyToken = (req, res, next)=>{
     }
 }
 
+const postFormValidation = (data)=>{
+    const schemaValidation = joi.object({
+        title: joi.string().required().min(6).max(100),
+        description: joi.string().required().min(6).max(10000),
+    })
+
+    return schemaValidation.validate(data)
+} 
+
+const commentFormValidation = (data)=>{
+    const schemaValidation = joi.object({
+        commentText: joi.string().required().min(6).max(256)
+    })
+
+    return schemaValidation.validate(data)
+}
+
 module.exports.registerFormValidation = registerFormValidation
 module.exports.loginFormValidation = loginFormValidation
 module.exports.verifyToken = verifyToken
+module.exports.postFormValidation = postFormValidation
+module.exports.commentFormValidation = commentFormValidation 
