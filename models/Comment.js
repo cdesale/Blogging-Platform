@@ -1,6 +1,7 @@
 const mongoose = require('mongoose')
 const User = require('./User')
 
+// Using a separate schema for comment. 
 const commentSchema = mongoose.Schema({
     commentText:{
         type:String,

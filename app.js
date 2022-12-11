@@ -10,18 +10,20 @@ const mongoose = require('mongoose')
 
 //2. Middleware.
 app.use(bodyParser.json())
-app.use('/users', usersRoute)
-app.use('/posts', postsRoute)
+app.use('/user', usersRoute)
+app.use('/post', postsRoute)
+
+//3. Connect to mongoDB.
 mongoose.connect(process.env.DB_CONNECTOR, ()=>{
     console.log('DB is connected')
 })
 
-//3. Create a route.
+//4. Create a route.
 app.get('/',(req,res)=>{
     res.send('Welcome to MiniWall!')
 })
 
-//4. Start the server.
+//5. Start the server.
 app.listen(process.env.PORT,()=>{
     console.log('Server is up and running...')
 })

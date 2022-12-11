@@ -8,19 +8,22 @@ const {postFormValidation, commentFormValidation} = require('../validations/vali
 
 const router = express.Router()
 
-router.get('/', verifyToken, async(req,res)=>{
+const EXCLUDE_USER_ATTRIBUTES = '-email -password -date -__v'
+
+router.get('/feed', verifyToken, async(req,res)=>{
     try{
         const posts = await Post.find()
                                 .sort({'likesCount': -1, 'timeStamp':-1})
-                                .populate('likes')
-                                .populate('owner')
+                                .populate('likes', EXCLUDE_USER_ATTRIBUTES)
+                                .populate('owner', EXCLUDE_USER_ATTRIBUTES)
                                 .populate(   
                                 {
                                     path: 'comments',
                                     model: Comment,
                                     populate: {
                                         path: 'owner',
-                                        model: User
+                                        model: User,
+                                        select: 'username'
                                     }
                                 })
         res.send(posts)
@@ -67,9 +70,16 @@ router.post('/like/:postId', verifyToken, async(req,res)=>{
     if(post.likes.includes(requestUserId)){
         return res.status(400).send('You have already liked this post!')
     }
-
+    
     post.likes.push(requestUserId)
     post.likesCount = post.likes.length
+    
+    // Strangely Mongoose doesn't include array attributes if they are empty.
+    if (post.comments.length == 0) {
+        // Set an empty array for comments attribute otherwise the save
+        // command below throws an error.
+        post.comments = []
+    }
 
     try{
         const savedPost = await post.save()
@@ -109,6 +119,14 @@ router.post('/comment/:postId', verifyToken, async(req, res)=>{
     }
     
     post.comments.push(savedComment._id)
+
+    // Strangely Mongoose doesn't include array attributes if they are empty.
+    if (post.likes.length == 0) {
+        // Set an empty array for likes attribute otherwise the save command
+        // below throws an error.
+        post.likes = []
+    }
+
     try{
         const savedPost = await post.save()
         res.send("You have commented on this post!")
