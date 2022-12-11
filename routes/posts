@@ -94,7 +94,7 @@ router.post('/like/:postId', verifyToken, async(req,res)=>{
     }
 })
 
-router.get('like/:postId', verifyToken, async(req, res) => {
+router.get('/like/:postId', verifyToken, async(req, res) => {
     let post
     try{
         post = await Post.findById(req.params.postId).populate('likes')
@@ -161,7 +161,7 @@ router.post('/comment/:postId', verifyToken, async(req, res)=>{
     }
 })
 
-router.get('comment/:postId', verifyToken, async(req, res) => {
+router.get('/comment/:postId', verifyToken, async(req, res) => {
     let post
     try{
         post = await Post.findById(req.params.postId)
