@@ -97,7 +97,7 @@ router.post('/comment/:postId', verifyToken, async(req, res)=>{
 
     let post
     try{
-        post = await Post.findById(req.params.postId)
+        post = await Post.findById(req.params.postId).populate('owner')
     }catch(err){
         return res.status(400).send({message:err})
     }
@@ -106,9 +106,15 @@ router.post('/comment/:postId', verifyToken, async(req, res)=>{
         return res.status(400).send("Post not found!")
     }
 
+    const postOwnerUserId = post.owner._id.toString()
+    const requestUserId = getRequestUserId(req)
+    if(postOwnerUserId === requestUserId){
+        return res.status(400).send('You cannot comment on your own post!')
+    }
+
     const comment = new Comment({
         commentText: req.body.commentText,
-        owner: getRequestUserId(req)
+        owner: requestUserId
     })
 
     let savedComment
