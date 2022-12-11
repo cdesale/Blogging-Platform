@@ -97,7 +97,7 @@ router.post('/like/:postId', verifyToken, async(req,res)=>{
 router.get('/like/:postId', verifyToken, async(req, res) => {
     let post
     try{
-        post = await Post.findById(req.params.postId).populate('likes')
+        post = await Post.findById(req.params.postId).populate('likes', EXCLUDE_USER_ATTRIBUTES)
     }catch(err){
         return res.status(400).send({message:err})
     }
