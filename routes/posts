@@ -61,6 +61,11 @@ router.post('/like/:postId', verifyToken, async(req,res)=>{
     }catch(err){
         return res.status(400).send({message:err})
     }
+    
+    if (!post) {
+        return res.status(400).send("Post not found!")
+    }
+    
     const postOwnerUserId = post.owner._id.toString()
     const requestUserId = getRequestUserId(req)
     if(postOwnerUserId === requestUserId){
@@ -87,6 +92,21 @@ router.post('/like/:postId', verifyToken, async(req,res)=>{
     }catch(err){
         res.status(400).send({message:err})
     }
+})
+
+router.get('like/:postId', verifyToken, async(req, res) => {
+    let post
+    try{
+        post = await Post.findById(req.params.postId).populate('likes')
+    }catch(err){
+        return res.status(400).send({message:err})
+    }
+    
+    if (!post) {
+        return res.status(400).send("Post not found!")
+    }
+    
+    res.send(post.likes)
 })
 
 router.post('/comment/:postId', verifyToken, async(req, res)=>{
@@ -139,6 +159,31 @@ router.post('/comment/:postId', verifyToken, async(req, res)=>{
     }catch(err){
         res.status(400).send({message:err})
     }
+})
+
+router.get('comment/:postId', verifyToken, async(req, res) => {
+    let post
+    try{
+        post = await Post.findById(req.params.postId)
+                         .populate(   
+                         {
+                             path: 'comments',
+                             model: Comment,
+                             populate: {
+                                 path: 'owner',
+                                 model: User,
+                                 select: 'username'
+                             }
+                         })
+    }catch(err){
+        return res.status(400).send({message:err})
+    }
+    
+    if (!post) {
+        return res.status(400).send("Post not found!")
+    }
+    
+    res.send(post.comments)
 })
 
 const getRequestUserId = (req)=>{
