@@ -1,6 +1,6 @@
-# MiniWall REST API
+# Blogging-Platform
 
-This is the API service for the MiniWall blogsite. The service uses Node.js for service code, MongoDB for database, and Docker for containerisation.
+This is the API service for the Blogging-Platform. The service uses Node.js for service code, MongoDB for database, and Docker for containerisation.
 
 ## Setup
 The setup required is a simple two part process:
